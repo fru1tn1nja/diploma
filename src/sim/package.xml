@@ -6,8 +6,6 @@
   <maintainer email="fruktin03@gmail.com">Student</maintainer>
   <license>MIT</license>
   <buildtool_depend>ament_cmake</buildtool_depend>
-  <buildtool_depend>ament_python</buildtool_depend>
-  <build_type>ament_cmake</build_type>
   <depend>rclpy</depend>
   <depend>geometry_msgs</depend>
   <depend>std_msgs</depend>

@@ -2,6 +2,7 @@ venv/
 build/
 install/
 log/
+src/vrx/
 
 __pycache__/
 *.py[cod]

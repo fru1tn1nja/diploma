@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+<head>
+  <title>ASV Operator UI</title>
+  <script src="https://static.robotwebtools.org/roslibjs/current/roslib.min.js"></script>
+</head>
+<body>
+  <h2>ASV Operator Panel</h2>
+  <p>Status: <span id="status">Disconnected</span></p>
+  <button onclick="toggleAuto()">Toggle Auto/Manual</button>
+  <script>
+    var ros = new ROSLIB.Ros({url: 'ws://localhost:9090'});
+    ros.on('connection', function() { document.getElementById('status').textContent='Connected'; });
+    ros.on('error',     function() { document.getElementById('status').textContent='Error'; });
+    ros.on('close',     function() { document.getElementById('status').textContent='Closed'; });
+
+    var overridePub = new ROSLIB.Topic({ros: ros, name: '/override', messageType: 'std_msgs/Bool'});
+    function toggleAuto() {
+      overridePub.publish({data: true});
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+thruster_controller:
+  ros__parameters:
+    type: diff_drive_controller/DiffDriveController
+    left_wheel_names: ['left_nozzle_joint']
+    right_wheel_names: ['right_nozzle_joint']
+    wheels_separation: 1.2
+    wheel_radius: 0.05
+    publish_rate: 20.0
+    base_frame_id: base_link

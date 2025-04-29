@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>asv_sim</name>
+  <version>0.0.0</version>
+  <description>asv_sim package for ASV simulation demo.</description>
+  <maintainer email="student@example.com">Student</maintainer>
+  <license>MIT</license>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_python</buildtool_depend>
+  <build_type>ament_cmake</build_type>
+  <depend>rclpy</depend>
+  <depend>geometry_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>nav_msgs</depend>
+  <exec_depend>gazebo_ros2_control</exec_depend>
+  <export>
+  </export>
+</package>

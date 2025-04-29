@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <package format="3">
-  <name>asv_sim</name>
+  <name>sim</name>
   <version>0.0.0</version>
-  <description>asv_sim package for ASV simulation demo.</description>
-  <maintainer email="student@example.com">Student</maintainer>
+  <description>sim package for ASV simulation demo.</description>
+  <maintainer email="fruktin03@gmail.com">Student</maintainer>
   <license>MIT</license>
   <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_depend>ament_python</buildtool_depend>

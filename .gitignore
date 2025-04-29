@@ -1,1 +1,10 @@
 venv/
+build/
+install/
+log/
+
+__pycache__/
+*.py[cod]
+
+.vscode/
+.idea/

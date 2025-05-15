@@ -1,0 +1,122 @@
+version: "3.9"
+
+# ---------------------------------------------------------------------------
+# VOLUMES
+# ---------------------------------------------------------------------------
+volumes:
+  pgdata:
+
+# ---------------------------------------------------------------------------
+# NETWORKS
+# ---------------------------------------------------------------------------
+networks:
+  internal: {}    # приватная bridge-сеть (Postgres, EMQX, Collector, Gateway)
+  public:   {}    # наружу выводим только gateway и streamlit
+
+# ---------------------------------------------------------------------------
+# SERVICES
+# ---------------------------------------------------------------------------
+services:
+  # ---------------------------- DATABASE -----------------------------------
+  postgres:
+    image: postgis/postgis:16-3.4
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      POSTGRES_USER:     ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB:       ${POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - internal
+
+  # ---------------------------- MQTT BROKER --------------------------------
+  emqx:
+    image: emqx/emqx:5.6
+    restart: unless-stopped
+    env_file: .env
+    # Оставьте порт 1883 наружу только при локальной отладке
+    ports:
+      - "${MQTT_PORT:-1883}:1883"     # MQTT
+      - "18083:18083"                 # EMQX Web-UI
+    networks:
+      - internal
+
+  # ---------------------------- ROS SWITCH LOGIC ---------------------------
+  switch_logic:
+    build:
+      context: .
+      dockerfile: docker/switch_logic/Dockerfile
+      target: runtime
+    network_mode: host          # DDS multicast, портов наружу не открывает
+    env_file: .env
+    depends_on:
+      - emqx
+
+  # ---------------------------- AI PLANNER ---------------------------------
+  ai_planner:
+    build:
+      context: .
+      dockerfile: docker/ai_planner/Dockerfile
+      target: runtime
+    network_mode: host
+    env_file: .env
+    depends_on:
+      - emqx
+      - switch_logic
+
+  # ---------------------------- ROS → MQTT BRIDGE --------------------------
+  ros_mqtt_bridge:
+    build:
+      context: .
+      dockerfile: docker/bridge/Dockerfile
+      target: runtime
+    network_mode: host
+    env_file: .env           # DEVICE_ID, MQTT_HOST, MQTT_PORT
+    depends_on:
+      - emqx
+
+  # ---------------------------- TELEMETRY COLLECTOR ------------------------
+  collector:
+    build:
+      context: .
+      dockerfile: docker/collector/Dockerfile
+      target: runtime
+    env_file: .env
+    depends_on:
+      - postgres
+      - emqx
+    networks:
+      - internal
+
+  # ---------------------------- FASTAPI GATEWAY ----------------------------
+  gateway:
+    build:
+      context: .
+      dockerfile: docker/gateway/Dockerfile
+      target: runtime
+    env_file: .env
+    ports:
+      - "8000:${API_PORT:-8000}"     # публичная точка API
+    depends_on:
+      - postgres
+      - emqx
+    networks:
+      - internal
+      - public
+
+  # ---------------------------- STREAMLIT DASHBOARD ------------------------
+  # streamlit:
+  #   build:
+  #     context: .
+  #     dockerfile: docker/streamlit/Dockerfile
+  #     target: runtime
+  #   env_file: .env
+  #   ports:
+  #     - "8501:8501"
+  #   depends_on:
+  #     - gateway
+  #   networks:
+  #     - internal
+  #     - public

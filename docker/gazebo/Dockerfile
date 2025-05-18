@@ -1,10 +1,10 @@
-FROM osrf/ros:humble-desktop-full
-# доп. пакеты: модель Iris, bridge с ROS 2
-RUN apt-get update && \
-    apt-get install -y ros-humble-ros-ign-gazebo \
-                       ros-humble-ros-ign-bridge \
-                       ros-humble-ros-ign-gazebo-demos && \
-    apt-get clean
+FROM ros:humble-ros-base AS builder
+RUN apt-get update && apt-get install -y \
+      ros-humble-ros-ign-gazebo \
+      ros-humble-ros-ign-bridge \
+      ignition-gazebo6 \
+      ignition-fuel-tools6 && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # копируем world + launch
 WORKDIR /sim

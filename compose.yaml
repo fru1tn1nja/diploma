@@ -105,6 +105,13 @@ services:
     networks:
       - internal
       - public
+  gazebo:
+    build:
+      context: .
+      dockerfile: docker/gazebo/Dockerfile
+    network_mode: host          # DDS multicast + Ignition transport
+    depends_on:
+      - ros_mqtt_bridge
 
   # ---------------------------- STREAMLIT DASHBOARD ------------------------
   # streamlit:

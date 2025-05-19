@@ -10,12 +10,15 @@
   },
   "dependencies": {
     "@heroicons/react": "^2.0.18",
+    "@react-three/drei": "^10.0.8",
+    "@react-three/fiber": "^9.1.2",
     "next": "15.3.2",
     "plotly.js": "^3.0.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-map-gl": "^7.1.9",
     "react-plotly.js": "^2.6.0",
+    "three": "^0.176.0",
     "zustand": "^4.5.7"
   },
   "devDependencies": {

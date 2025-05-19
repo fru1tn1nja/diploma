@@ -89,6 +89,7 @@ services:
       - emqx
     networks:
       - internal
+    restart: on-failure
 
   # ---------------------------- FASTAPI GATEWAY ----------------------------
   gateway:

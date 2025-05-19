@@ -1,7 +1,9 @@
+"use client"  
 import MapView from '@/components/map/MapView'
 import BatteryChart from '@/components/charts/BatteryChart'
 import ControlPanel from '@/components/ui/ControlPanel'
 import {useTelemetry} from '@/hooks/useTelemetry'
+import DroneMini3D from '@/components/mini3d/Drone'
 import {useEffect} from 'react'
 
 export default function Home() {
@@ -12,6 +14,7 @@ export default function Home() {
     <main className="p-4 space-y-6">
       <h1 className="text-2xl font-semibold">UAV Dashboard</h1>
       <MapView/>
+      <DroneMini3D/>
       <BatteryChart/>
       <ControlPanel/>
     </main>

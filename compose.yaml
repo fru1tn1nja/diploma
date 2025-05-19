@@ -107,7 +107,9 @@ services:
       - public
     
   frontend:
-    build: docker/frontend
+    build: 
+      context: .
+      dockerfile: docker/frontend/Dockerfile
     environment:
       - NEXT_PUBLIC_GATEWAY=${NEXT_PUBLIC_GATEWAY}
       - NEXT_PUBLIC_MAPBOX_TOKEN=${NEXT_PUBLIC_MAPBOX_TOKEN}

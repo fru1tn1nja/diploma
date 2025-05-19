@@ -1,15 +1,7 @@
-<?xml version="1.6" ?>
+<?xml version="1.6"?>
 <sdf version="1.6">
   <world name="empty_world">
-    <!-- Подтянет модель Iris из Fuel автоматически -->
-    <include>
-      <uri>model://iris</uri>
-      <name>iris</name>
-    </include>
-
-    <!-- Немного света, чтобы камера работала -->
-    <include>
-      <uri>model://sun</uri>
-    </include>
+    <include><uri>model://iris</uri></include>
+    <include><uri>model://sun</uri></include>
   </world>
 </sdf>

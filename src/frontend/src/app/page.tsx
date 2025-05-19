@@ -5,7 +5,7 @@ import ControlPanel from '@/components/ui/ControlPanel'
 import {useTelemetry} from '@/hooks/useTelemetry'
 import DroneMini3D from '@/components/mini3d/Drone'
 import {useEffect} from 'react'
-
+export const dynamic = 'force-dynamic'
 export default function Home() {
   const connect = useTelemetry(s=>s.connect)
   useEffect(()=>{ connect() }, [connect])

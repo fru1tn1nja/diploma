@@ -111,31 +111,21 @@ services:
       - public
     restart: unless-stopped
 
-
-  px4_sitl:
-    image: px4io/px4-dev-simulation:humble
-    command: jmavsim   # (можно gazebo, airsim, но jmavsim самый лёгкий)
-    network_mode: host           # DDS multicast + UDP/14560
+  generator:
+    build:
+      context: .
+      dockerfile: docker/generator/Dockerfile
     environment:
-      - ROS_DOMAIN_ID=${ROS_DOMAIN_ID}
+      DEVICE_ID: ${DEVICE_ID}
+      MQTT_HOST: ${MQTT_HOST}         # брокер во внутренней сети
+      MQTT_PORT: ${MQTT_PORT}
+      FREQ_HZ: ${FREQ_HZ}
     depends_on:
-      - ros_mqtt_bridge
+      emqx:
+        condition: service_healthy
+    networks:
+      - internal
     restart: unless-stopped
-  # generator:
-  #   build:
-  #     context: .
-  #     dockerfile: docker/generator/Dockerfile
-  #   environment:
-  #     DEVICE_ID: ${DEVICE_ID}
-  #     MQTT_HOST: ${MQTT_HOST}         # брокер во внутренней сети
-  #     MQTT_PORT: ${MQTT_PORT}
-  #     FREQ_HZ: ${FREQ_HZ}
-  #   depends_on:
-  #     emqx:
-  #       condition: service_healthy
-  #   networks:
-  #     - internal
-  #   restart: unless-stopped
     
   frontend:
     build: 

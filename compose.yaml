@@ -53,6 +53,7 @@ services:
     env_file: .env
     depends_on:
       - emqx
+    restart: unless-stopped
 
   # ---------------------------- AI PLANNER ---------------------------------
   ai_planner:
@@ -65,6 +66,7 @@ services:
     depends_on:
       - emqx
       - switch_logic
+    restart: unless-stopped
 
   # ---------------------------- ROS → MQTT BRIDGE --------------------------
   ros_mqtt_bridge:
@@ -76,6 +78,7 @@ services:
     env_file: .env           # DEVICE_ID, MQTT_HOST, MQTT_PORT
     depends_on:
       - emqx
+    restart: unless-stopped
 
   # ---------------------------- TELEMETRY COLLECTOR ------------------------
   collector:
@@ -89,7 +92,7 @@ services:
       - emqx
     networks:
       - internal
-    restart: on-failure
+    restart: unless-stopped
 
   # ---------------------------- FASTAPI GATEWAY ----------------------------
   gateway:
@@ -106,6 +109,33 @@ services:
     networks:
       - internal
       - public
+    restart: unless-stopped
+
+
+  px4_sitl:
+    image: px4io/px4-dev-simulation:humble
+    command: jmavsim   # (можно gazebo, airsim, но jmavsim самый лёгкий)
+    network_mode: host           # DDS multicast + UDP/14560
+    environment:
+      - ROS_DOMAIN_ID=${ROS_DOMAIN_ID}
+    depends_on:
+      - ros_mqtt_bridge
+    restart: unless-stopped
+  # generator:
+  #   build:
+  #     context: .
+  #     dockerfile: docker/generator/Dockerfile
+  #   environment:
+  #     DEVICE_ID: ${DEVICE_ID}
+  #     MQTT_HOST: ${MQTT_HOST}         # брокер во внутренней сети
+  #     MQTT_PORT: ${MQTT_PORT}
+  #     FREQ_HZ: ${FREQ_HZ}
+  #   depends_on:
+  #     emqx:
+  #       condition: service_healthy
+  #   networks:
+  #     - internal
+  #   restart: unless-stopped
     
   frontend:
     build: 
@@ -116,6 +146,7 @@ services:
       - NEXT_PUBLIC_MAPBOX_TOKEN=${NEXT_PUBLIC_MAPBOX_TOKEN}
     ports: ["3000:3000"]
     depends_on: [gateway]
+    restart: unless-stopped
   # gazebo:
   #   build:
   #     context: docker/gazebo  

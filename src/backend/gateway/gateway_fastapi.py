@@ -68,7 +68,7 @@ async def telemetry_ws(ws: WebSocket, device_id: int):
             await client.subscribe(topic)
             async with client.unfiltered_messages() as messages:
                 async for msg in messages:
-                    await ws.send_bytes(msg.payload)
+                    await ws.send_text(msg.payload.decode())
     except (MqttError, WebSocketDisconnect):
         pass
     finally:

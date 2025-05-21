@@ -1,18 +1,26 @@
-FROM ros:humble-ros-base
+# ──────────────────────────────────────────────────────────────
+# ROS 2 Humble + Gazebo Classic (11) + TurtleBot3 + bridge utils
+# ──────────────────────────────────────────────────────────────
+FROM osrf/ros:humble-desktop-full AS base
 
-# Gazebo Sim + мосты + демо-миры
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        ros-humble-ros-gz \
-        ros-humble-ros-gz-sim-demos \
-        ros-humble-ros-gz-bridge && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+# 1. system deps
+RUN apt-get update && apt-get install -y \
+        gazebo \
+        ros-humble-gazebo-ros-pkgs \
+        ros-humble-gazebo-ros2-control \
+        ros-humble-turtlebot3-gazebo \
+        python3-colcon-common-extensions \
+        && rm -rf /var/lib/apt/lists/*
 
-# пример мира из демо-пакета
-ENV GZ_WORLD=/opt/ros/humble/share/ros_gz_sim_demos/worlds/shapes.sdf
-# чтоб Gazebo сначала искал ресурсы локально, а не на Fuel
-ENV GZ_SIM_RESOURCE_PATH=/opt/ros/humble/share
+# 2. environment for TB3
+ENV TURTLEBOT3_MODEL=burger \
+    ROS_DOMAIN_ID=0 \
+    RMW_IMPLEMENTATION=rmw_fastrtps_cpp
 
-ENTRYPOINT ["/bin/bash", "-c", \
-    "source /opt/ros/humble/setup.bash && \
-     gz sim -r ${GZ_WORLD}"]
+# 3. copy launch assets
+WORKDIR /sim_ws
+COPY launch/ launch/
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]

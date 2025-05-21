@@ -1,67 +1,69 @@
 #!/usr/bin/env python3
 """
-Генератор: MQTT + ROS /odom одновременно.
+Мини-симулятор ASV.
+  • вход:  /cmd_vel    (geometry_msgs/Twist)
+  • выход: /odom       (nav_msgs/Odometry)
+           /battery    (sensor_msgs/BatteryState)
 
-env: DEVICE_ID, MQTT_HOST, MQTT_PORT, FREQ_HZ, RADIUS_METERS
+Модель: простая кинематика на плоскости, dt = 0.1 с.
+Батарея линейно падает от 100 % до 0 % за 20 мин.
 """
 from __future__ import annotations
-import os, json, time, math
-import paho.mqtt.client as mqtt
-
-import rclpy
+import math, time, os, rclpy
 from rclpy.node import Node
+from geometry_msgs.msg import Twist, Quaternion
 from nav_msgs.msg import Odometry
-from geometry_msgs.msg import Quaternion
+from sensor_msgs.msg import BatteryState
 
-# ---------- параметры -----------------------------------------------------
-did   = int(os.getenv("DEVICE_ID", 1))
-host  = os.getenv("MQTT_HOST", "emqx")
-port  = int(os.getenv("MQTT_PORT", 1883))
-hz    = float(os.getenv("FREQ_HZ", 2))
-R     = float(os.getenv("RADIUS_METERS", 100))
-topic = f"telemetry/{did}"
+DT = 0.1                        # шаг интегрирования (с)
+BATTERY_SEC = 1200              # время разряда (20 мин)
 
-# ---------- ROS-узел ------------------------------------------------------
-class GenNode(Node):
+class ASVSim(Node):
     def __init__(self):
-        super().__init__("fake_gen")
-        self.pub_odom = self.create_publisher(Odometry, "/odom", 10)
-        self.t0 = time.time()
-        # MQTT
-        self.mqtt = mqtt.Client()
-        self.mqtt.connect(host, port, keepalive=30)
-        # таймер
-        self.create_timer(1/hz, self.tick)
+        super().__init__("asv_sim")
+        self.x = self.y = self.yaw = 0.0
+        self.v = self.omega = 0.0
+        self.start_time = time.time()
 
-    def tick(self):
-        t = time.time() - self.t0
-        lat = 60.0 + 0.001*math.cos(t/(10/R))
-        lon = 30.0 + 0.001*math.sin(t/(10/R))
-        vel = 2.0
-        # MQTT
-        self.mqtt.publish(topic, json.dumps({
-            "device_id": did, "ts": int(time.time()*1000),
-            "lat": lat, "lon": lon, "alt": 0.0,
-            "vel": vel, "battery": max(0, 100-int(t/6))
-        }), qos=0)
-        # ROS Odometry (x↔lat, y↔lon)
+        self.create_subscription(Twist, '/cmd_vel', self.on_cmd, 10)
+        self.pub_odom = self.create_publisher(Odometry, '/odom', 10)
+        self.pub_batt = self.create_publisher(BatteryState, '/battery', 5)
+
+        self.create_timer(DT, self.step)
+        self.get_logger().info("ASV simulator started")
+
+    def on_cmd(self, msg: Twist):
+        self.v      = msg.linear.x
+        self.omega  = msg.angular.z
+
+    def step(self):
+        # интегрируем
+        self.x   += self.v * math.cos(self.yaw) * DT
+        self.y   += self.v * math.sin(self.yaw) * DT
+        self.yaw += self.omega * DT
+
+        # публикуем /odom
         odom = Odometry()
-        odom.pose.pose.position.x = lat
-        odom.pose.pose.position.y = lon
-        odom.pose.pose.orientation = Quaternion(w=1.0)   # yaw=0
-        odom.twist.twist.linear.x = vel
+        odom.header.frame_id          = 'map'
+        odom.header.stamp             = self.get_clock().now().to_msg()
+        odom.pose.pose.position.x     = self.x
+        odom.pose.pose.position.y     = self.y
+        odom.pose.pose.orientation    = Quaternion(
+            z = math.sin(self.yaw/2), w = math.cos(self.yaw/2))
+        odom.twist.twist.linear.x     = self.v
+        odom.twist.twist.angular.z    = self.omega
         self.pub_odom.publish(odom)
 
-def main():
-    rclpy.init()
-    node = GenNode()
-    node.get_logger().info(f"Gen → MQTT {host}:{port} & /odom @ {hz} Hz")
-    try:
-        rclpy.spin(node)
-    except KeyboardInterrupt:
-        pass
-    finally:
-        node.destroy_node(); rclpy.shutdown()
+        # батарея
+        batt = BatteryState()
+        batt.percentage = max(0.0,
+            1.0 - (time.time()-self.start_time)/BATTERY_SEC)
+        self.pub_batt.publish(batt)
 
-if __name__ == "__main__":
+def main(args=None):
+    rclpy.init(args=args)
+    rclpy.spin(ASVSim())
+    rclpy.shutdown()
+
+if __name__ == '__main__':
     main()

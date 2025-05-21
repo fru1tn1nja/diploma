@@ -136,13 +136,36 @@ services:
     ports: ["3000:3000"]
     depends_on: [gateway]
     restart: always
+
+
+
   # gazebo:
   #   build:
   #     context: docker/gazebo  
   #     dockerfile: Dockerfile
-  #   network_mode: host
+  #   network_mode: host        # DDS/RTPS multicast shared with ROS 2 nodes
+  #   environment:
+  #     - ROS_DOMAIN_ID=0
+  #     - GAZEBO_HEADLESS=1      # выключаем X11
+  #   command: [
+  #     "gazebo", "--verbose",
+  #     "-s", "libgazebo_ros_init.so",
+  #     "-s", "libgazebo_ros_factory.so",
+  #     "/sim_ws/launch/world.world",
+  #     "--render-engine", "ogre"
+  #   ]
   #   depends_on:
-  #     - ros_mqtt_bridge
+  #     - ros_mqtt_bridge        # или любой другой ваш ROS‑сервис
+  #   restart: unless-stopped
+
+  # gzweb:
+  #   build:
+  #     context: .
+  #     dockerfile: docker/gzweb/Dockerfile
+  #   network_mode: host         # делит те же multicast пакеты DDS
+  #   depends_on:
+  #     - gazebo
+  #   restart: unless-stopped
 
   # ---------------------------- STREAMLIT DASHBOARD ------------------------
   # streamlit:

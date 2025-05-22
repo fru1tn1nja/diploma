@@ -18,8 +18,8 @@ export default function ManualPanel(){
     twist.linear.x = x; twist.angular.z = z
     pub.publish(new ROSLIB.Message(twist))
   }
-  const btn = "px-3 py-1 rounded bg-slate-200 disabled:opacity-30"
-
+  const btn = "px-3 py-1 rounded bg-slate-700 text-white hover:bg-slate-600 " +
+              "disabled:bg-slate-300 disabled:text-slate-500"
   return (
    <div className="flex gap-2 mt-2 select-none">
      <button className={btn} disabled={disabled}

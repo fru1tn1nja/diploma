@@ -111,7 +111,8 @@ export default function MiniMap() {
         width: 360,
         borderRadius: 12,
         overflow: 'hidden',
-        boxShadow: '0 0 8px #000'
+        background: '#f7f7f7',
+        boxShadow: '0 0 10px rgba(0,0,0,.25)'
       }}
       maxBounds={[[-60, -60], [60, 60]]}
       dragging={false}
@@ -124,11 +125,11 @@ export default function MiniMap() {
           center={o.xy}
           radius={o.r}
           pathOptions={{ color: '#1e90ff', fillOpacity: 0.4 }}
-        />
+          title="Obstacle"/>
       ))}
 
       {/* цель */}
-      {mission?.goal && <Marker position={mission.goal} icon={L.GOAL_ICON} />}
+      {mission?.goal && <Marker position={mission.goal} icon={L.GOAL_ICON} title="Goal"/>}
 
       {/* маршрут планировщика */}
       {mission?.waypoints && mode === 'AI' && (
@@ -149,7 +150,7 @@ export default function MiniMap() {
           iconAnchor: [7, 7],
           html: `<div style="width:14px;height:14px;background:red;clip-path:polygon(50% 0,0 100%,100% 100%)"></div>`
         })}
-      />
+        title="Vehicle"/>
     </MapContainer>
   )
 }

@@ -7,7 +7,7 @@ ROS-2 → MQTT bridge (sync, paho-mqtt 1.x).
 from __future__ import annotations
 import os, json, time
 import paho.mqtt.client as mqtt
-
+import math
 import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import Odometry
@@ -25,7 +25,8 @@ class Bridge(Node):
         # MQTT sync client
         self.mqtt = mqtt.Client()
         self.mqtt.connect(mqtt_host, mqtt_port, keepalive=30)
-
+        self.mqtt.loop_start()
+        
         self._latest_batt = None
         self._latest_yaw = 0.0
         self.create_subscription(Odometry,      "/odom",    self.on_odom,  20)

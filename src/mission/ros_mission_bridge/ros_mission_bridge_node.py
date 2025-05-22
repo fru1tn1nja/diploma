@@ -13,7 +13,7 @@ class MissionBridge(Node):
 
         self.device_id  = int(os.getenv("DEVICE_ID", "1"))
         self.topic      = f"mission/waypoints/{self.device_id}"
-        mqtt_host       = os.getenv("MQTT_HOST", "127.0.0.1")
+        mqtt_host       = "127.0.0.1"
         mqtt_port       = int(os.getenv("MQTT_PORT", "1883"))
 
         self.mqtt = mqtt.Client()

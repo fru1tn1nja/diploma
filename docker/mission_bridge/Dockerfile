@@ -2,7 +2,7 @@ FROM ros:humble AS builder
 RUN apt-get update && apt-get install -y python3-pip && \
     pip install -U colcon-common-extensions "asyncio-mqtt==0.16.2" "paho-mqtt<2.0"
 WORKDIR /ws
-COPY src/bridge/ ./src/ros_mission_bridge/
+COPY src/mission/ ./src/ros_mission_bridge/
 RUN . /opt/ros/humble/setup.sh && \
     colcon build --packages-select ros_mission_bridge --install-base /opt/install
 

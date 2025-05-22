@@ -5,7 +5,7 @@ import {useState} from 'react'
 import {useTelemetry} from '@/hooks/useTelemetry'
 
 const ros = new ROSLIB.Ros({url:'ws://localhost:9090'})
-const pub = new ROSLIB.Topic({ros,name:'/manual_cmd_vel',messageType:'geometry_msgs/Twist'})
+const pub = new ROSLIB.Topic({ros,name:'/cmd_vel',messageType:'geometry_msgs/Twist'})
 const twist = {linear:{x:0,y:0,z:0}, angular:{x:0,y:0,z:0}}
 
 export default function ManualPanel(){

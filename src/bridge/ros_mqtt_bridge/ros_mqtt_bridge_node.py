@@ -27,6 +27,7 @@ class Bridge(Node):
         self.mqtt.connect(mqtt_host, mqtt_port, keepalive=30)
 
         self._latest_batt = None
+        self._latest_yaw = 0.0
         self.create_subscription(Odometry,      "/odom",    self.on_odom,  20)
         self.create_subscription(BatteryState,  "/battery", self.on_batt,  10)
 
@@ -39,6 +40,11 @@ class Bridge(Node):
     def on_odom(self, msg: Odometry):
         p = msg.pose.pose.position
         v = msg.twist.twist.linear
+        q = msg.pose.pose.orientation
+        siny_cosp = 2*(q.w*q.z + q.x*q.y)
+        cosy_cosp = 1 - 2*(q.y*q.y + q.z*q.z)
+        self._latest_yaw = math.atan2(siny_cosp, cosy_cosp)
+
         payload = {
             "device_id": self.device_id,
             "ts": int(time.time() * 1000),
@@ -47,6 +53,7 @@ class Bridge(Node):
             "alt": p.z,
             "vel": v.x,
             "battery": self._latest_batt,
+            "yaw": self._latest_yaw, 
         }
         self.mqtt.publish(self.topic, json.dumps(payload), qos=0)
 

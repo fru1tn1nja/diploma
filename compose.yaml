@@ -20,7 +20,7 @@ services:
   # ---------------------------- DATABASE -----------------------------------
   postgres:
     image: postgis/postgis:16-3.4
-    restart: always
+    restart: on-failure
     env_file: .env
     environment:
       POSTGRES_USER:     ${POSTGRES_USER}
@@ -34,7 +34,7 @@ services:
   # ---------------------------- MQTT BROKER --------------------------------
   emqx:
     image: emqx/emqx:5.6
-    restart: always
+    restart: on-failure
     env_file: .env
     # Оставьте порт 1883 наружу только при локальной отладке
     ports:
@@ -53,7 +53,7 @@ services:
     env_file: .env
     depends_on:
       - emqx
-    restart: always
+    restart: on-failure
 
   # ---------------------------- AI PLANNER ---------------------------------
   ai_planner:
@@ -66,7 +66,7 @@ services:
     depends_on:
       - emqx
       - switch_logic
-    restart: always
+    restart: on-failure
 
   # ---------------------------- ROS → MQTT BRIDGE --------------------------
   ros_mqtt_bridge:
@@ -78,7 +78,7 @@ services:
     env_file: .env           # DEVICE_ID, MQTT_HOST, MQTT_PORT
     depends_on:
       - emqx
-    restart: always
+    restart: on-failure
 
   # ---------------------------- TELEMETRY COLLECTOR ------------------------
   collector:
@@ -92,7 +92,7 @@ services:
       - emqx
     networks:
       - internal
-    restart: always
+    restart: on-failure
 
   # ---------------------------- FASTAPI GATEWAY ----------------------------
   gateway:
@@ -109,7 +109,7 @@ services:
     networks:
       - internal
       - public
-    restart: always
+    restart: on-failure
 
   generator:
     build:
@@ -124,7 +124,7 @@ services:
       - emqx
     networks:
       - internal
-    restart: always
+    restart: on-failure
     
   frontend:
     build: 
@@ -135,10 +135,25 @@ services:
       - NEXT_PUBLIC_MAPBOX_TOKEN=${NEXT_PUBLIC_MAPBOX_TOKEN}
     ports: ["3000:3000"]
     depends_on: [gateway]
-    restart: always
+    restart: on-failure
 
-
-
+  rosbridge:
+    image: ros:humble-ros-base
+    build:
+      context: .
+      dockerfile: docker/rosbridge/Dockerfile
+    network_mode: host
+    depends_on:
+      - switch_logic
+  mission_bridge:
+    build:
+      context: .
+      dockerfile: docker/mission_bridge/Dockerfile
+    network_mode: host
+    env_file: .env
+    depends_on:
+      - emqx
+    restart: on-failure
   # gazebo:
   #   build:
   #     context: docker/gazebo  

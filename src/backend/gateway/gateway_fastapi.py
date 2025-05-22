@@ -46,7 +46,30 @@ async def close_pool():
     if hasattr(app.state, "pool"):
         await app.state.pool.close()  # type: ignore[attr-defined]
 
+
+
 # ───── REST: последняя телеметрия ──────────────────────────────────────────
+
+@app.websocket("/ws/mode")
+async def ws_mode(ws: WebSocket):
+    await ws.accept()
+    conn: asyncpg.Connection | None = None
+    try:
+        conn = await asyncpg.connect(dsn=DB_DSN)
+        # слушаем канал pg_notify (можно LISTEN) или опрашиваем таблицу switches
+        prev = None
+        while True:
+            row = await conn.fetchrow("SELECT mode FROM current_mode LIMIT 1")
+            mode = row["mode"] if row else "Manual"
+            if mode != prev:
+                await ws.send_text(mode)
+                prev = mode
+            await asyncio.sleep(0.5)
+    finally:
+        if conn: await conn.close()
+        await ws.close()
+
+        
 @app.get("/api/telemetry/latest")
 async def telemetry_latest(device_id: int,
                            pool: asyncpg.Pool = Depends(get_pool)) -> Dict[str, Any]:
@@ -73,6 +96,22 @@ async def telemetry_ws(ws: WebSocket, device_id: int):
         pass
     finally:
         await ws.close()
+
+@app.websocket("/ws/mission")
+async def mission_ws(ws: WebSocket):
+    await ws.accept()
+    topic = "mission/waypoints/1"
+    try:
+        async with Client(MQTT_HOST, port=MQTT_PORT) as client:
+            await client.subscribe(topic)
+            async with client.unfiltered_messages() as messages:
+                async for msg in messages:
+                    await ws.send_text(msg.payload.decode())
+    except (MqttError, WebSocketDisconnect):
+        pass
+    finally:
+        await ws.close()
+
 
 # ───── локальный запуск ────────────────────────────────────────────────────
 if __name__ == "__main__":

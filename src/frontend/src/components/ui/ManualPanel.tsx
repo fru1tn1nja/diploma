@@ -23,9 +23,9 @@ export default function ManualPanel(){
   return (
    <div className="flex gap-2 mt-2 select-none">
      <button className={btn} disabled={disabled}
-             onClick={()=>{setW(w+0.3);send(v,w+0.3)}}>⟲ Left</button>
+             onClick={()=>{setW(w-0.3);send(v,w-0.3)}}>⟲ Left</button>
      <button className={btn} disabled={disabled}
-             onClick={()=>{setW(w-0.3);send(v,w-0.3)}}>Right ⟳</button>
+             onClick={()=>{setW(w+0.3);send(v,w+0.3)}}>Right ⟳</button>
      <button className={btn} disabled={disabled}
              onClick={()=>{setV(v+0.2);send(v+0.2,w)}}>+Speed</button>
      <button className={btn} disabled={disabled}

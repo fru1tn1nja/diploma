@@ -1,4 +1,3 @@
-/* src/components/map/MiniMap.tsx */
 'use client'
 import { useEffect, useMemo, useRef } from 'react'
 import dynamic from 'next/dynamic'
@@ -17,58 +16,70 @@ const OBST = [
 
 export default function MiniMap () {
   const { packet, buffer, mission } = useTelemetry()
-  const mapRef = useRef<L.Map | null>(null)
+  const mapRef = useRef<L.Map|null>(null)
 
-  /* ─────────────── стабильные координаты ─────────────── */
-  const pos = useMemo<[number, number] | null>(() => (
-    packet ? [packet.lat, packet.lon] : null
-  ), [packet?.lat, packet?.lon])            // зависим не от массива, а от чисел
-
+  const pos = useMemo<[number,number] | null>(
+    () => packet ? [packet.lat, packet.lon] : null,
+    [packet?.lat, packet?.lon]
+  )
   const yaw = packet?.yaw ?? 0
 
-  /* ─────────────── трек – тоже не условный ───────────── */
-  const track = useMemo<[number, number][]>(() =>
-    buffer.slice(-300).map(p => [p.lat, p.lon]),
-  [buffer])
+  // трек
+  const track = useMemo<[number,number][]>(
+    () => buffer.slice(-300).map(p => [p.lat, p.lon]),
+    [buffer]
+  )
 
-  /* ─────────────── держим лодку в центре ─────────────── */
+  // лодка как раньше
+  const vehicleIcon = useMemo(() => L.divIcon({
+    iconSize:   [11,11],
+    iconAnchor: [5,11],
+    className:  '',
+    html: `<div style="
+      width:11px;height:11px;
+      background:#e11d48;
+      clip-path:polygon(50% 0,0 100%,100% 100%);
+      transform:rotate(${yaw}rad);
+      transform-origin:50% 100%;
+    "></div>`,
+  }), [yaw])
+
+  // **новое**: иконка цели
+  const goalIcon = useMemo(() => L.divIcon({
+    iconSize:   [16,16],
+    iconAnchor: [11,11],
+    className:  '',
+    html: `<div style="
+      width:16px;height:16px;
+      background:gold;
+      clip-path:polygon(
+        50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,
+        50% 70%,21% 91%,32% 57%,2% 35%,39% 35%
+      );
+    "></div>`,
+  }), [])
+
+  // центрируем карту под лодкой
   useEffect(() => {
     if (mapRef.current && pos) {
       mapRef.current.setView(pos, mapRef.current.getZoom(), { animate:false })
     }
   }, [pos])
 
-  /* ─────────────── иконка, пересоздаётся по yaw ───────── */
-  const vehicleIcon = useMemo(() => L.divIcon({
-    iconSize  : [22,22],
-    iconAnchor: [11,11],
-    className : 'leaflet-div-icon',      // не трогаем базовые стили
-    html: `<div style="
-            width:22px;height:22px;
-            background:#e11d48;
-            clip-path:polygon(50% 0,0 100%,100% 100%);
-            transform:rotate(${yaw}rad);
-          "></div>`
-  }), [yaw])
-
-  /* ─────────────── раньше return'или, теперь всё OK ──── */
   if (!pos) return <p className="text-gray-500">loading…</p>
 
   return (
     <MapContainer
+      ref={mapRef}
+      whenReady={() => {}}
       attributionControl={false}
-      ref={mapRef}                /* ref вместо whenCreated */
-      whenReady={() => {/* карта готова – ref уже заполнен */}}
-
       center={pos}
       zoom={1}
       crs={L.CRS.Simple}
       style={{
-        height: 360,
-        width: 360,
-        borderRadius: 12,
-        background: '#f5f5f5',
-        boxShadow: '0 0 10px rgba(0,0,0,.25)',
+        height:360, width:360,
+        borderRadius:12, background:'#f5f5f5',
+        boxShadow:'0 0 10px rgba(0,0,0,.25)',
       }}
       maxBounds={[[-60,-60],[60,60]]}
       dragging={false}
@@ -76,14 +87,27 @@ export default function MiniMap () {
     >
       {OBST.map((o,i) => (
         <Circle key={i} center={o.xy} radius={o.r}
-                pathOptions={{color:'#1e90ff', fillOpacity:0.4}}/>
+                pathOptions={{color:'#1e90ff',fillOpacity:0.4}}/>
       ))}
 
-      {mission?.waypoints && <Polyline positions={mission.waypoints} color="orange" weight={2} />}
-      {!mission?.waypoints   && <Polyline positions={track}           color="red"    weight={2} />}
+      {/* если есть миссия — рисуем её трассу */}
+      {/*{mission?.waypoints
+        ? <Polyline positions={mission.waypoints} color="orange" weight={2} />
+        : <Polyline positions={track}           color="red"    weight={2} />
+      }*/}
+      <Polyline positions={track}           color="red"    weight={2} />
+      {/* 🚩 НОВЫЙ МАРКЕР ЦЕЛИ */}
+      {mission?.goal && (
+        <Marker
+          position={mission.goal}
+          icon={goalIcon}
+          title="Target"
+        />
+      )}
 
+      {/* 🔺 Лодка */}
       <Marker
-        key={`boat-${yaw.toFixed(2)}`}   /* заставляем React-Leaflet перерисовать маркер */
+        key={`boat-${yaw.toFixed(2)}`}
         position={pos}
         icon={vehicleIcon}
       />

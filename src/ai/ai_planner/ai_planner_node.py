@@ -29,6 +29,15 @@ from rcl_interfaces.msg import ParameterType
 Vec2 = np.ndarray  # alias (2‑D)
 
 
+# --- в ai_planner_node.py --------------------------------
+from std_msgs.msg import UInt8
+from enum import IntEnum
+class ControlMode(IntEnum):
+    AI_CONTROL = 0
+    OPERATOR_CONTROL = 1
+    MIXED = 2
+    FAILSAFE = 3
+
 def dist(a: Vec2, b: Vec2) -> float:
     return float(np.linalg.norm(a - b))
 
@@ -58,6 +67,12 @@ class AIPlanner(Node):
         self._pub_cmd = self.create_publisher(Twist, "/cmd_vel", 10)
         self._pub_evt = self.create_publisher(String, "/ai/events", 10)
         self._pub_path = self.create_publisher(Path, "/path_planned", 10)
+
+
+
+        self._mode = ControlMode.AI_CONTROL
+        self.create_subscription(UInt8, "/control/mode", self.on_mode, 10)
+
 
         # таймер планирования (10 Гц)
         self.create_timer(0.1, self.plan_step)
@@ -95,8 +110,13 @@ class AIPlanner(Node):
         cosy_cosp = 1 - 2 * (q.y * q.y + q.z * q.z)
         self._yaw = math.atan2(siny_cosp, cosy_cosp)
 
+    def on_mode(self, msg: UInt8):
+        self._mode = ControlMode(msg.data)
+
     # ------------------------------------------------------------
     def plan_step(self):
+        if self._mode != ControlMode.AI_CONTROL:
+            return
         if not self._waypoints:
             return
         if self._pose is None:

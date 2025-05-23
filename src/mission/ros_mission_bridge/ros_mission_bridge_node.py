@@ -18,9 +18,9 @@ class MissionBridge(Node):
 
         self.mqtt = mqtt.Client()
         self.mqtt.connect(mqtt_host, mqtt_port, keepalive=30)
+        self.mqtt.loop_start()
 
-        self.create_subscription(Path, "/mission/waypoints",
-                                 self.on_path, 10)
+        self.create_subscription(Path, "/mission/waypoints", self.on_path, 10)
         self.get_logger().info(f"mission-bridge → {self.topic}")
 
     def on_path(self, msg: Path):

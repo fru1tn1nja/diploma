@@ -56,15 +56,22 @@ export const useTelemetry = create<Store>((set, get) => ({
     /* ---------- WebSocket 2: режим Manual / AI ---------- */
     const wsMode = new WebSocket(`ws://${gw}/ws/mode`)
     wsMode.onmessage = (e) => {
-      const m = e.data === 'AI' ? 'AI' : 'Manual'
+      // сервер шлёт строку-код: '0' = AI, '1' = Manual
+      const code = e.data
+      const m: 'AI' | 'Manual' = code === '0' ? 'AI' : 'Manual'
       set({ mode: m })
     }
-    
-    const wsMission = new WebSocket(`ws://${gw}/ws/mission`)
-    wsMission.onmessage = (e)=>{
-      try{ set({mission: JSON.parse(e.data)}) }catch{}
-    }
-
     wsMode.onclose = () => set({ mode: 'Manual' })   // фолбэк
+
+    /* ---------- WebSocket 3: миссия ---------- */
+    const wsMission = new WebSocket(`ws://${gw}/ws/mission/1`)
+    wsMission.onmessage = (e) => {
+      console.log("🛰 Mission raw payload:", e.data)
+      try {
+        set({ mission: JSON.parse(e.data) })
+      } catch (err) {
+        console.warn("Bad JSON in mission:", err)
+      }
+    }
   },
 }))

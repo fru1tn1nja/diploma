@@ -97,10 +97,10 @@ async def telemetry_ws(ws: WebSocket, device_id: int):
     finally:
         await ws.close()
 
-@app.websocket("/ws/mission")
-async def mission_ws(ws: WebSocket):
+@app.websocket("/ws/mission/{device_id}")
+async def mission_ws(ws: WebSocket, device_id: int):
     await ws.accept()
-    topic = "mission/waypoints/1"
+    topic = f"mission/waypoints/{device_id}"
     try:
         async with Client(MQTT_HOST, port=MQTT_PORT) as client:
             await client.subscribe(topic)

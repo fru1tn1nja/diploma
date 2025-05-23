@@ -155,6 +155,18 @@ services:
     depends_on:
       - emqx
     restart: on-failure
+  mode_writer:
+    build:
+      context: .
+      dockerfile: docker/mode_writer/Dockerfile
+    env_file: .env
+    environment:
+      - DB_DSN=${DB_DSN}
+    networks:
+      - internal
+    depends_on:
+      - postgres
+    restart: on-failure
   # gazebo:
   #   build:
   #     context: docker/gazebo  

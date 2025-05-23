@@ -5,7 +5,7 @@ import ManualPanel from '@/components/ui/ManualPanel'
 import BatteryIndicator from '@/components/ui/BatteryIndicator'
 import { useTelemetry } from '@/hooks/useTelemetry'
 import { useEffect } from 'react'
-
+import ModeSwitch from '@/components/ui/ModeSwitch'
 /* MiniMap зависит от Leaflet (window, document). Подключаем SSA-less */
 const MiniMap = dynamic(() => import('@/components/map/MiniMap'), { ssr: false })
 
@@ -35,6 +35,7 @@ export default function Home() {
       <BatteryIndicator />
       <BatteryChart />
       <ManualPanel />
+      <ModeSwitch />
     </main>
   )
 }

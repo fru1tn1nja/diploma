@@ -4,3 +4,4 @@ asyncpg>=0.28,<1.0
 asyncio-mqtt==0.16.2
 paho-mqtt<2.0 
 python-dotenv>=1.0
+asyncio

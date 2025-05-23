@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import os
 from typing import Any, Dict
-
+import asyncio 
 from dotenv import load_dotenv
 load_dotenv()                         # читает .env при локальном запуске
 

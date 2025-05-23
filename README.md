@@ -1,2 +1,3 @@
 # diploma
-colcon build --merge-install --cmake-args -DAMENT_CMAKE_SYMLINK_INSTALL=OFF
+git clone 
+docker compose up --build -d

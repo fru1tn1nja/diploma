@@ -93,6 +93,8 @@ class AIPlanner(Node):
     # ------------------------------------------------------------
     # SUBSCRIBE callbacks
     def on_path(self, msg: Path):
+        n = len(msg.poses)
+        self.get_logger().info(f"❗ on_path(): got {n} waypoints")
         self._waypoints = [np.array([p.pose.position.x, p.pose.position.y]) for p in msg.poses]
         self._current_wp_idx = 0
         self._pub_path.publish(msg)  # отдадим тот же путь для визуализации
@@ -120,10 +122,13 @@ class AIPlanner(Node):
     # ------------------------------------------------------------
     def plan_step(self):
         if self._mode != ControlMode.AI_CONTROL:
+            self.get_logger().warn("plan_step: skipping, mode is not AI_CONTROL")
             return
         if not self._waypoints:
+            self.get_logger().warn("plan_step: skipping, no waypoints")
             return
         if self._pose is None:
+            self.get_logger().warn("plan_step: skipping, no odom yet")
             return  # нет одометрии yet
 
         # --- safety check ---

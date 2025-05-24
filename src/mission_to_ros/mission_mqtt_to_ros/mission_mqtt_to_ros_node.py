@@ -14,7 +14,7 @@ class MissionMqttToRos(Node):
         super().__init__('mission_mqtt_to_ros')
         # Читаем DEVICE_ID и MQTT_HOST/PORT из окружения
         dev = os.getenv('DEVICE_ID', '1')
-        topic = f'mission/waypoints/{dev}'
+        topic = f'mission/commands/{dev}'
         self.get_logger().info(f'Will bridge MQTT→ROS for topic "{topic}"')
 
         # ROS-публикатор Path

@@ -40,6 +40,7 @@ services:
     # Оставьте порт 1883 наружу только при локальной отладке
     ports:
       - "${MQTT_PORT:-1883}:1883"     # MQTT
+      - "8083:8083"                   # ws
       - "18083:18083"                 # EMQX Web-UI
     networks:
       - internal
@@ -143,6 +144,7 @@ services:
     build:
       context: .
       dockerfile: docker/rosbridge/Dockerfile
+    env_file: .env
     network_mode: host
     depends_on:
       - switch_logic

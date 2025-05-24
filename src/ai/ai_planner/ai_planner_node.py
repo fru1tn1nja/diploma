@@ -51,6 +51,8 @@ class AIPlanner(Node):
         self.cruise_speed = self.declare_and_get("cruise_speed_mps", 2.5)  # м/с
         self.yaw_kp = self.declare_and_get("yaw_kp", 1.2)
         self.wp_radius = self.declare_and_get("wp_radius", 0.5)            # м
+        self.max_angular_speed = self.declare_and_get("max_angular_speed", 1.0)
+        self.align_threshold = self.declare_and_get("align_threshold_rad", 0.3)
 
         # -------- состояние -------------
         self._waypoints: List[Vec2] = []
@@ -94,7 +96,7 @@ class AIPlanner(Node):
         self._waypoints = [np.array([p.pose.position.x, p.pose.position.y]) for p in msg.poses]
         self._current_wp_idx = 0
         self._pub_path.publish(msg)  # отдадим тот же путь для визуализации
-        self.get_logger().info("Mission received: %d waypoints", len(self._waypoints))
+        self.get_logger().info(f"Mission received: {len(self._waypoints)} waypoints")
 
     def on_scan(self, msg: LaserScan):
         self._laser_ranges = np.array(msg.ranges)
@@ -151,17 +153,27 @@ class AIPlanner(Node):
 
         # скорость уменьшается к финишу
         speed = self.cruise_speed * min(1.0, dist_to_wp / 5.0)
+        if abs(yaw_error) > self.align_threshold:
+            linear_speed = 0.0
+        else:
+            linear_speed = float(speed)
+
+        raw_angular = self.yaw_kp * yaw_error
+        angular_speed = max(
+            -self.max_angular_speed,
+            min(self.max_angular_speed, float(raw_angular))
+        )
 
         cmd = Twist()
-        cmd.linear.x = float(speed)
-        cmd.angular.z = float(self.yaw_kp * yaw_error)
+        cmd.linear.x = linear_speed
+        cmd.angular.z = angular_speed
         self._pub_cmd.publish(cmd)
 
     # ------------------------------------------------------------
     def publish_event(self, etype: str, *, severity: int, confidence: float, detail: str):
         evt = {"type": etype, "severity": severity, "confidence": confidence, "msg": detail}
         self._pub_evt.publish(String(data=json.dumps(evt)))
-        self.get_logger().info("evt %s", evt)
+        self.get_logger().info(f"evt {evt}")
 
 
 # -------------------------------------------------------------------------

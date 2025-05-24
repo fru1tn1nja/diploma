@@ -13,6 +13,7 @@
     "@react-three/drei": "^10.0.8",
     "@react-three/fiber": "^9.1.2",
     "leaflet": "^1.9.4",
+    "mqtt": "^5.13.0",
     "next": "15.3.2",
     "plotly.js": "^3.0.1",
     "react": "^19.0.0",

@@ -22,6 +22,7 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist, PoseStamped
 from nav_msgs.msg import Path, Odometry
+from rclpy.qos import QoSProfile, QoSDurabilityPolicy
 from sensor_msgs.msg import LaserScan
 from std_msgs.msg import String
 from rcl_interfaces.msg import ParameterType
@@ -62,7 +63,11 @@ class AIPlanner(Node):
         self._yaw: float = 0.0
 
         # -------- pub/sub ---------------
-        self.create_subscription(Path, "/mission/waypoints", self.on_path, 10)
+        qos = QoSProfile(
+            depth=1,
+            durability=QoSDurabilityPolicy.RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL,
+        )
+        self.create_subscription(Path, "/mission/waypoints", self.on_path, qos)
         self.create_subscription(LaserScan, "/scan", self.on_scan, 10)
         self.create_subscription(Odometry, "/odom", self.on_odom, 20)
 

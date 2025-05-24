@@ -4,6 +4,7 @@ from __future__ import annotations
 import os, json, rclpy
 from rclpy.node import Node
 from nav_msgs.msg import Path
+from rclpy.qos import QoSProfile, QoSDurabilityPolicy
 import numpy as np
 import paho.mqtt.client as mqtt
 
@@ -19,8 +20,11 @@ class MissionBridge(Node):
         self.mqtt = mqtt.Client()
         self.mqtt.connect(mqtt_host, mqtt_port, keepalive=30)
         self.mqtt.loop_start()
-
-        self.create_subscription(Path, "/mission/waypoints", self.on_path, 10)
+        qos = QoSProfile(
+            depth=1,
+            durability=QoSDurabilityPolicy.RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL,
+        )
+        self.create_subscription(Path, "/mission/waypoints", self.on_path, qos)
         self.get_logger().info(f"mission-bridge → {self.topic}")
 
     def on_path(self, msg: Path):
@@ -28,6 +32,7 @@ class MissionBridge(Node):
                for p in msg.poses]
         goal = wps[-1] if wps else None
         payload = {"waypoints": wps, "goal": goal}
+        self.get_logger().info(f"mission-bridge → {goal}")
         self.mqtt.publish(self.topic, json.dumps(payload), qos=0)
 
 def main(args=None):

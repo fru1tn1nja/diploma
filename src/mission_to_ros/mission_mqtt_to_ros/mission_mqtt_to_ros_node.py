@@ -7,6 +7,7 @@ from rclpy.node import Node
 import paho.mqtt.client as mqtt
 
 from nav_msgs.msg import Path
+from rclpy.qos import QoSProfile, QoSDurabilityPolicy
 from geometry_msgs.msg import PoseStamped
 
 class MissionMqttToRos(Node):
@@ -18,7 +19,11 @@ class MissionMqttToRos(Node):
         self.get_logger().info(f'Will bridge MQTT→ROS for topic "{topic}"')
 
         # ROS-публикатор Path
-        self._pub = self.create_publisher(Path, '/mission/waypoints', 10)
+        qos = QoSProfile(
+            depth=1,
+            durability=QoSDurabilityPolicy.RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL,
+        )
+        self._pub = self.create_publisher(Path, '/mission/waypoints', qos)
 
         # Настраиваем MQTT-клиент
         self._mqtt = mqtt.Client()

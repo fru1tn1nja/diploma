@@ -21,7 +21,7 @@ class MissionMqttToRos(Node):
         # ROS-публикатор Path
         qos = QoSProfile(
             depth=1,
-            durability=QoSDurabilityPolicy.RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL,
+            durability=QoSDurabilityPolicy.TRANSIENT_LOCAL,
         )
         self._pub = self.create_publisher(Path, '/mission/waypoints', qos)
 

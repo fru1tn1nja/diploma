@@ -22,7 +22,7 @@ class MissionBridge(Node):
         self.mqtt.loop_start()
         qos = QoSProfile(
             depth=1,
-            durability=QoSDurabilityPolicy.RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL,
+            durability=QoSDurabilityPolicy.TRANSIENT_LOCAL,
         )
         self.create_subscription(Path, "/mission/waypoints", self.on_path, qos)
         self.get_logger().info(f"mission-bridge → {self.topic}")

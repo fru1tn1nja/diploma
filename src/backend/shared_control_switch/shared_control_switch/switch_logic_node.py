@@ -99,12 +99,14 @@ class SwitchLogic(Node):
 
     def on_operator_command(self, msg: String):
         self._last_operator_command = msg.data
+        self.get_logger().info(f"[SwitchLogic] on_operator_command: got '{msg.data}'")
+        self._last_operator_command = msg.data
         if msg.data == "TAKE_OVER":
             self.transition(ControlMode.OPERATOR_CONTROL, reason="operator TAKE_OVER")
         elif msg.data == "RESUME_AI":
             self.transition(ControlMode.AI_CONTROL, reason="operator RESUME_AI")
-        elif msg.data == "FAILSAFE":
-            self.transition(ControlMode.FAILSAFE, reason="operator FAILSAFE")
+        # elif msg.data == "FAILSAFE":
+        #     self.transition(ControlMode.FAILSAFE, reason="operator FAILSAFE")
 
     def on_health(self, msg: UInt8):
         if msg.data:
@@ -115,8 +117,12 @@ class SwitchLogic(Node):
     # Main FSM evaluation
     def evaluate_state(self):
         now = self.get_clock().now()
-        if (now - self._last_health_ts) > Duration(seconds=float(self.switch_timeout)):
-            self.transition(ControlMode.FAILSAFE, reason="health timeout")
+
+
+        # if (now - self._last_health_ts) > Duration(seconds=float(self.switch_timeout)):
+        #     self.transition(ControlMode.FAILSAFE, reason="health timeout")
+
+        
         # publish current mode on every cycle
         self._pub_mode.publish(UInt8(data=int(self._mode)))
 

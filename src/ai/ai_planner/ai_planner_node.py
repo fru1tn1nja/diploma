@@ -111,7 +111,9 @@ class AIPlanner(Node):
         self._yaw = math.atan2(siny_cosp, cosy_cosp)
 
     def on_mode(self, msg: UInt8):
-        self._mode = ControlMode(msg.data)
+        new = ControlMode(msg.data)
+        self.get_logger().info(f"AIPlanner on_mode(): switching to {new.name}")
+        self._mode = new
 
     # ------------------------------------------------------------
     def plan_step(self):

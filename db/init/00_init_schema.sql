@@ -20,11 +20,11 @@ CREATE INDEX IF NOT EXISTS telemetry_ts_idx     ON telemetry (ts DESC);
 
 -- ───────────────────────────── CURRENT MODE ──────────────────────────────
 CREATE TABLE IF NOT EXISTS current_mode (
-    id   boolean PRIMARY KEY DEFAULT TRUE,
-    mode text    NOT NULL    DEFAULT 'Manual'
+    id   boolean  PRIMARY KEY DEFAULT TRUE,
+    mode integer  NOT NULL    DEFAULT 1             -- 1 = Manual
 );
 
-INSERT INTO current_mode(id,mode) VALUES (TRUE,'Manual')
-ON CONFLICT (id) DO NOTHING;
-
-COMMIT;
+-- Заполняем/исправляем существующую строку
+INSERT INTO current_mode(id,mode) VALUES (TRUE,1)
+ON CONFLICT (id)            -- если строка уже была
+DO UPDATE SET mode = EXCLUDED.mode;

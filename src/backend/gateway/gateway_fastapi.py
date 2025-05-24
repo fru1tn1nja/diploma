@@ -60,7 +60,7 @@ async def ws_mode(ws: WebSocket):
         prev = None
         while True:
             row = await conn.fetchrow("SELECT mode FROM current_mode LIMIT 1")
-            mode = row["mode"] if row else "Manual"
+            mode = row["mode"] if row else "1"
             if mode != prev:
                 await ws.send_text(mode)
                 prev = mode

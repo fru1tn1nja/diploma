@@ -29,19 +29,41 @@ Vec2 = np.ndarray
 
 # Простая заглушка для обхода: замените на полноценный алгоритм при необходимости
 def simple_rrt(start: Vec2, goal: Vec2, obstacles: List[Tuple[Vec2, float]]) -> List[Vec2]:
-    for (o, r) in obstacles:
-        v = goal - start
+    path = [start]
+    current = start.copy()
+
+    while True:
+        v = goal - current
         vv = np.dot(v, v)
-        t = np.dot(o - start, v) / vv
-        t = float(np.clip(t, 0.0, 1.0))
-        p = start + t * v
-        if np.linalg.norm(p - o) < r:
-            n = np.array([-v[1], v[0]])
-            n /= np.linalg.norm(n)
-            margin = 1.0
-            detour = o + n * (r + margin)
-            return [start, detour, goal]
-    return [start, goal]
+        collisions: List[Tuple[float, Vec2, float]] = []
+
+        # Собираем все пересечения текущего сегмента
+        for (o, r) in obstacles:
+            t = np.dot(o - current, v) / vv
+            t_clamped = float(np.clip(t, 0.0, 1.0))
+            p = current + t_clamped * v
+            if np.linalg.norm(p - o) < r:
+                collisions.append((t_clamped, o, r))
+
+        # Если пересечений нет — завершаем путь
+        if not collisions:
+            path.append(goal)
+            break
+
+        # Сортируем по ближайшему столкновению
+        collisions.sort(key=lambda x: x[0])
+        _, o, r = collisions[0]
+
+        # Вычисляем детур вокруг круга
+        perp = np.array([-v[1], v[0]])
+        perp /= np.linalg.norm(perp)
+        margin = 1.0
+        detour = o + perp * (r + margin)
+
+        path.append(detour)
+        current = detour
+
+    return path
 
 # Режимы управления
 class ControlMode(IntEnum):

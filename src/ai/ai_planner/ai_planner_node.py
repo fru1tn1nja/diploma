@@ -196,7 +196,7 @@ class AIPlanner(Node):
         self._pub_evt.publish(String(data=json.dumps(evt)))
         self.get_logger().info(f"evt {evt}")
 
-     def _publish_obstacles(self):
+    def _publish_obstacles(self):
         arr = [[float(o[0][0]), float(o[0][1]), float(o[1])]
                for o in self._obstacles]
         msg = String(data=json.dumps({"obstacles": arr}))

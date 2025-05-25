@@ -24,19 +24,20 @@ const Circle = dynamic(
 )
 
 // статические объекты препятствий
-const OBST = [
-  { xy: [20, 0] as [number, number], r: 8 },
-  { xy: [-15, 15] as [number, number], r: 6 },
-]
 
 export default function MiniMap() {
   const { connect, packet, buffer, mission, obstacles } = useTelemetry()
   const [clickGoal, setClickGoal] = useState<[number, number] | null>(null)
-
+  useEffect(() => {
+    console.log("⚡ Received obstacles:", obstacles)
+  }, [obstacles])
+  
   const mapRef = useRef<L.Map | null>(null)
   const mqttRef = useRef<MqttClient | null>(null)
   const deviceId = 1  // или заберите из конфигурации
-
+  useEffect(() => {
+    connect()
+  }, [connect])
   // 1) Подключаемся к EMQX по WebSocket для публикации команд миссии
   useEffect(() => {
     const host = process.env.NEXT_PUBLIC_MQTT_WS_HOST ?? window.location.hostname
@@ -49,7 +50,7 @@ export default function MiniMap() {
     return () => {
       client.end()
     }
-  }, [connect])
+  }, [])
 
   // 2) Хендлер двойного клика: формируем JSON и шлём в MQTT + сразу рисуем локальный clickGoal
   const handleDblclick = (e: L.LeafletMouseEvent) => {
@@ -169,14 +170,6 @@ export default function MiniMap() {
       zoomControl={false}
       doubleClickZoom={false}
     >
-      {OBST.map((o, i) => (
-        <Circle
-          key={i}
-          center={o.xy}
-          radius={o.r}
-          pathOptions={{ color: '#1e90ff', fillOpacity: 0.4 }}
-        />
-      ))}
 
       {/* рисуем трек */}
       <Polyline positions={track} color="red" weight={2} />

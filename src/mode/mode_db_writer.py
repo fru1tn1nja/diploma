@@ -33,7 +33,7 @@ class ModeWriter(Node):
     async def write_db(self, mode: int):
         assert self.pool is not None, 'DB pool not initialized'
         async with self.pool.acquire() as conn:
-            await conn.execute('UPDATE current_mode SET mode=$1', str(mode))
+            await conn.execute('UPDATE current_mode SET mode=$1', mode)
         self.get_logger().info(f'Mode {mode} written to DB')
 
 

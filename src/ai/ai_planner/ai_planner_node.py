@@ -109,7 +109,7 @@ class AIPlanner(Node):
         self._yaw = 0.0
         self._mode = ControlMode.AI_CONTROL
 
-
+        self._pub_obst = self.create_publisher(String, "/obstacles", 10)
         self._publish_obstacles()
         self.create_timer(1.0, self._publish_obstacles)
         # Pub/Sub
@@ -118,7 +118,7 @@ class AIPlanner(Node):
         self.create_subscription(Odometry, "/odom",            self.on_odom, 20)
         self.create_subscription(UInt8, "/control/mode",      self.on_mode, 10)
 
-        self._pub_obst = self.create_publisher(String, "/obstacles", 10)
+        
         self._pub_cmd  = self.create_publisher(Twist,  "/cmd_vel",     10)
         self._pub_evt  = self.create_publisher(String, "/ai/events",    10)
         self._pub_path = self.create_publisher(Path,   "/path_planned",10)

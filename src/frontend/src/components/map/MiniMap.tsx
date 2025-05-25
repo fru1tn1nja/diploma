@@ -30,7 +30,7 @@ const OBST = [
 ]
 
 export default function MiniMap() {
-  const { packet, buffer, mission } = useTelemetry()
+  const { connect, packet, buffer, mission, obstacles } = useTelemetry()
   const [clickGoal, setClickGoal] = useState<[number, number] | null>(null)
 
   const mapRef = useRef<L.Map | null>(null)
@@ -49,7 +49,7 @@ export default function MiniMap() {
     return () => {
       client.end()
     }
-  }, [])
+  }, [connect])
 
   // 2) Хендлер двойного клика: формируем JSON и шлём в MQTT + сразу рисуем локальный clickGoal
   const handleDblclick = (e: L.LeafletMouseEvent) => {
@@ -180,7 +180,14 @@ export default function MiniMap() {
 
       {/* рисуем трек */}
       <Polyline positions={track} color="red" weight={2} />
-
+      {obstacles.map(([x,y,r], i) => (
+        <Circle
+          key={i}
+          center={[x,y]}
+          radius={r}
+          pathOptions={{ fillOpacity: 0.4 }}
+        />
+      ))}
       {/* 🚩 Маркер цели: сначала локальный клик, иначе mission.goal */}
       {(clickGoal || mission?.goal) && (
         <Marker

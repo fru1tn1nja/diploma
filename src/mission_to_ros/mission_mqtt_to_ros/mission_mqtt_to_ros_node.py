@@ -18,7 +18,8 @@ class MissionMqttToRos(Node):
         self.get_logger().info(f'Will bridge MQTT→ROS for topic "{topic}"')
 
         # ROS-публикатор Path
-        self._pub = self.create_publisher(Path, '/mission/waypoints', 10)
+        qos = QoSProfile(depth=1, durability=QoSDurabilityPolicy.TRANSIENT_LOCAL)
+        self._pub = self.create_publisher(Path, '/mission/waypoints', qos)
 
         # Настраиваем MQTT-клиент
         self._mqtt = mqtt.Client()

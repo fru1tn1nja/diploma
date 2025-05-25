@@ -28,3 +28,13 @@ CREATE TABLE IF NOT EXISTS current_mode (
 INSERT INTO current_mode(id,mode) VALUES (TRUE,1)
 ON CONFLICT (id)            -- если строка уже была
 DO UPDATE SET mode = EXCLUDED.mode;
+
+
+CREATE TABLE IF NOT EXISTS obstacles (
+  id      SERIAL PRIMARY KEY,
+  device_id INT NOT NULL,
+  x        DOUBLE PRECISION NOT NULL,
+  y        DOUBLE PRECISION NOT NULL,
+  radius   DOUBLE PRECISION NOT NULL,
+  ts       BIGINT NOT NULL  -- epoch-ms, когда сгенерировано
+);

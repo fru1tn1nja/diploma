@@ -6,12 +6,12 @@ REST- и WebSocket-шлюз между фронтендом и сервисам�
 *  WS   /ws/telemetry/{device_id}           — живой поток MQTT → WS
 """
 from __future__ import annotations
-
+from typing import List
 import os
 from typing import Any, Dict
 import asyncio 
 from dotenv import load_dotenv
-load_dotenv()                         # читает .env при локальном запуске
+load_dotenv()                       
 
 import asyncpg
 from asyncio_mqtt import Client, MqttError
@@ -112,6 +112,20 @@ async def mission_ws(ws: WebSocket, device_id: int):
     finally:
         await ws.close()
 
+@app.websocket("/ws/obstacles/{device_id}")
+async def ws_obstacles(ws: WebSocket, device_id: int):
+    await ws.accept()
+    topic = f"obstacles/{device_id}"
+    try:
+        async with MQTTClient(MQTT_HOST, port=MQTT_PORT) as client:
+            await client.subscribe(topic)
+            async with client.unfiltered_messages() as msgs:
+                async for msg in msgs:
+                    await ws.send_text(msg.payload.decode())
+    except (MqttError, WebSocketDisconnect):
+        pass
+    finally:
+        await ws.close()
 
 # ───── локальный запуск ────────────────────────────────────────────────────
 if __name__ == "__main__":

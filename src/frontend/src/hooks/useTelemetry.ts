@@ -14,11 +14,12 @@ export type Telemetry = {
 }
 
 /* ---------- Zustand-store ---------- */
-interface Store {
+export interface Store {
   packet?: Telemetry            // последний пакет
   buffer:  Telemetry[]          // скользящее окно точек
   mission?: Mission
   mode: 'Manual' | 'AI'         // текущий режим, приходит из /ws/mode
+  obstacles: [number,number,number][]
   connect: () => void           // запускает WS-подписки (вызываем один раз)
 }
 
@@ -26,7 +27,7 @@ export const useTelemetry = create<Store>((set, get) => ({
   packet: undefined,
   buffer: [],
   mode: 'Manual',
-
+  obstacles: [],
   connect: () => {
     if (typeof window === 'undefined') return  // SSR-фаза
 
@@ -72,6 +73,14 @@ export const useTelemetry = create<Store>((set, get) => ({
       } catch (err) {
         console.warn("Bad JSON in mission:", err)
       }
+    }
+
+    const wsObs = new WebSocket(`ws://${gw}/ws/obstacles/1`)
+    wsObs.onmessage = e => {
+      try {
+        const { obstacles } = JSON.parse(e.data) as { obstacles: [number,number,number][] }
+        set({ obstacles })
+      } catch {}
     }
   },
 }))

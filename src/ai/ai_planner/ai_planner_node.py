@@ -85,22 +85,6 @@ class AIPlanner(Node):
         self.get_logger().info(f"Static obstacles: {self._obstacles}")
 
         # Подключение к Postgres и вставка
-        try:
-            dsn = os.environ["DB_DSN"]
-            conn = psycopg2.connect(dsn)
-            conn.autocommit = True
-            cur = conn.cursor()
-            ts = int(time.time() * 1000)
-            for (o, r) in self._obstacles:
-                cur.execute(
-                    "INSERT INTO obstacles(device_id, x, y, radius, ts) VALUES (%s,%s,%s,%s,%s)",
-                    (device_id, float(o[0]), float(o[1]), float(r), ts)
-                )
-            cur.close()
-            conn.close()
-            self.get_logger().info("Obstacles saved to DB")
-        except Exception as e:
-            self.get_logger().error(f"Failed to save obstacles to DB: {e}")
 
         # Состояние
         self._waypoints: List[Vec2] = []

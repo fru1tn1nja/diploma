@@ -14,6 +14,7 @@ import random
 from enum import IntEnum
 from typing import List, Tuple, Optional
 
+from rclpy.qos import QoSProfile, QoSDurabilityPolicy
 import numpy as np
 import psycopg2
 import rclpy

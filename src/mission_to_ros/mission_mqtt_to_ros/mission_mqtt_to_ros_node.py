@@ -5,6 +5,7 @@ import os, json
 import rclpy
 from rclpy.node import Node
 import paho.mqtt.client as mqtt
+from rclpy.qos import QoSProfile, QoSDurabilityPolicy
 
 from nav_msgs.msg import Path
 from geometry_msgs.msg import PoseStamped

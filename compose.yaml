@@ -50,7 +50,6 @@ services:
     build:
       context: .
       dockerfile: docker/switch_logic/Dockerfile
-      target: runtime
     network_mode: host          # DDS multicast, портов наружу не открывает
     env_file: .env
     depends_on:
@@ -62,7 +61,6 @@ services:
     build:
       context: .
       dockerfile: docker/ai_planner/Dockerfile
-      target: runtime
     network_mode: host
     env_file: .env
     depends_on:
@@ -75,7 +73,6 @@ services:
     build:
       context: .
       dockerfile: docker/bridge/Dockerfile
-      target: runtime
     network_mode: host
     env_file: .env           # DEVICE_ID, MQTT_HOST, MQTT_PORT
     depends_on:

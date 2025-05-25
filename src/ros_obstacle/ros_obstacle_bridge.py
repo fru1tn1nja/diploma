@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+#ros_obstacle_bridge.py
 """
 ROS 2 Humble node: ros_obstacle_bridge_node
 -------------------------------------------

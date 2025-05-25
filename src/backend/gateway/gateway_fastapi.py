@@ -117,7 +117,7 @@ async def ws_obstacles(ws: WebSocket, device_id: int):
     await ws.accept()
     topic = f"obstacles/{device_id}"
     try:
-        async with MQTTClient(MQTT_HOST, port=MQTT_PORT) as client:
+        async with Client(MQTT_HOST, port=MQTT_PORT) as client:
             await client.subscribe(topic)
             async with client.unfiltered_messages() as msgs:
                 async for msg in msgs:

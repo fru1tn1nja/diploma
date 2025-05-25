@@ -63,22 +63,19 @@ class AIPlanner(Node):
         self._yaw: float = 0.0
 
         # -------- pub/sub ---------------
-        qos = QoSProfile(
-            depth=1,
-            durability=QoSDurabilityPolicy.TRANSIENT_LOCAL,
-        )
+        qos = QoSProfile(depth=1, durability=QoSDurabilityPolicy.TRANSIENT_LOCAL)
         self.create_subscription(Path, "/mission/waypoints", self.on_path, qos)
-        self.create_subscription(LaserScan, "/scan", self.on_scan, 10)
-        self.create_subscription(Odometry, "/odom", self.on_odom, 20)
+        self.create_subscription(LaserScan, "/scan", self.on_scan, qos)
+        self.create_subscription(Odometry, "/odom", self.on_odom, qos)
 
-        self._pub_cmd = self.create_publisher(Twist, "/cmd_vel", 10)
-        self._pub_evt = self.create_publisher(String, "/ai/events", 10)
-        self._pub_path = self.create_publisher(Path, "/path_planned", 10)
+        self._pub_cmd = self.create_publisher(Twist, "/cmd_vel", qos)
+        self._pub_evt = self.create_publisher(String, "/ai/events", qos)
+        self._pub_path = self.create_publisher(Path, "/path_planned", qos)
 
 
 
         self._mode = ControlMode.AI_CONTROL
-        self.create_subscription(UInt8, "/control/mode", self.on_mode, 10)
+        self.create_subscription(UInt8, "/control/mode", self.on_mode, qos)
 
 
         # таймер планирования (10 Гц)

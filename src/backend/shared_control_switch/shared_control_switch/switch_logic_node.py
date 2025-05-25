@@ -36,6 +36,7 @@ from typing import Optional
 
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import QoSProfile, QoSDurabilityPolicy
 from rclpy.duration import Duration
 from rclpy.time import Time
 
@@ -62,12 +63,12 @@ class SwitchLogic(Node):
         self._last_operator_command: Optional[str] = None
         self._last_ai_event: Optional[str] = None
         self._last_health_ts: Time = self.get_clock().now()
-
+        qos = QoSProfile(depth=1, durability=QoSDurabilityPolicy.TRANSIENT_LOCAL)
         # Pub/Sub
-        self.create_subscription(String, "/ai/events", self.on_ai_event, 10)
-        self.create_subscription(String, "/operator/commands", self.on_operator_command, 10)
-        self.create_subscription(UInt8, "/telemetry/health", self.on_health, 10)
-        self._pub_mode = self.create_publisher(UInt8, "/control/mode", 10)
+        self.create_subscription(String, "/ai/events", self.on_ai_event, qos)
+        self.create_subscription(String, "/operator/commands", self.on_operator_command, qos)
+        self.create_subscription(UInt8, "/telemetry/health", self.on_health, qos)
+        self._pub_mode = self.create_publisher(UInt8, "/control/mode", qos)
 
         # Timer – periodic check
         self.create_timer(0.2, self.evaluate_state)

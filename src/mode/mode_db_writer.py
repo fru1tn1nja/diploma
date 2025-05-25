@@ -8,6 +8,7 @@ import asyncpg
 import rclpy
 from rclpy.node import Node
 from rclpy.executors import SingleThreadedExecutor
+from rclpy.qos import QoSProfile, QoSDurabilityPolicy
 from std_msgs.msg import UInt8
 
 class ModeWriter(Node):
@@ -16,7 +17,8 @@ class ModeWriter(Node):
         self.pool: asyncpg.Pool | None = None
         self._loop = loop
         # подписка на ROS-топик
-        self.create_subscription(UInt8, '/control/mode', self.on_mode, 10)
+        qos = QoSProfile(depth=1, durability=QoSDurabilityPolicy.TRANSIENT_LOCAL)
+        self.create_subscription(UInt8, '/control/mode', self.on_mode, qos)
 
     async def ainit(self):
         self.pool = await asyncpg.create_pool(dsn=os.environ['DB_DSN'])

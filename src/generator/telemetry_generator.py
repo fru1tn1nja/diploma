@@ -14,6 +14,7 @@ from rclpy.node import Node
 from geometry_msgs.msg import Twist, Quaternion
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import BatteryState
+from rclpy.qos import QoSProfile, QoSDurabilityPolicy
 
 DT = 0.1                        # шаг интегрирования (с)
 BATTERY_SEC = 1200              # время разряда (20 мин)
@@ -24,10 +25,10 @@ class ASVSim(Node):
         self.x = self.y = self.yaw = 0.0
         self.v = self.omega = 0.0
         self.start_time = time.time()
-
-        self.create_subscription(Twist, '/cmd_vel', self.on_cmd, 10)
-        self.pub_odom = self.create_publisher(Odometry, '/odom', 10)
-        self.pub_batt = self.create_publisher(BatteryState, '/battery', 5)
+        qos = QoSProfile(depth=1, durability=QoSDurabilityPolicy.TRANSIENT_LOCAL)
+        self.create_subscription(Twist, '/cmd_vel', self.on_cmd, qos)
+        self.pub_odom = self.create_publisher(Odometry, '/odom', qos)
+        self.pub_batt = self.create_publisher(BatteryState, '/battery', qos)
 
         self.create_timer(DT, self.step)
         self.get_logger().info("ASV simulator started")

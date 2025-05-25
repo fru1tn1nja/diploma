@@ -11,6 +11,7 @@ import math
 import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import Odometry
+from rclpy.qos import QoSProfile, QoSDurabilityPolicy
 from sensor_msgs.msg import BatteryState
 
 class Bridge(Node):
@@ -29,8 +30,9 @@ class Bridge(Node):
         
         self._latest_batt = None
         self._latest_yaw = 0.0
-        self.create_subscription(Odometry,      "/odom",    self.on_odom,  20)
-        self.create_subscription(BatteryState,  "/battery", self.on_batt,  10)
+        qos = QoSProfile(depth=1, durability=QoSDurabilityPolicy.TRANSIENT_LOCAL)
+        self.create_subscription(Odometry,      "/odom",    self.on_odom,  qos)
+        self.create_subscription(BatteryState,  "/battery", self.on_batt,  qos)
 
         self.get_logger().info(f"Bridge started → publish to {self.topic}")
 

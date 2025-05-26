@@ -55,12 +55,10 @@ col4.metric("📍 Longitude", f"{latest['lon']:.6f}")
 
 # ── Main charts ────────────────────────────────────────────────────────────────
 st.subheader("Battery History")
-chart_type = st.selectbox("Chart type", ["Line", "Area", "Bar"], key="chart_type")
+chart_type = st.selectbox("Chart type", ["Line", "Bar"], key="chart_type")
 
 if chart_type == "Line":
     st.line_chart(hist["battery"], use_container_width=True)
-elif chart_type == "Area":
-    st.area_chart(hist["battery"], use_container_width=True)
 else:
     st.bar_chart(hist["battery"], use_container_width=True)
 

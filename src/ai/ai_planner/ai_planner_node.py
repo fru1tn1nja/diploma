@@ -29,40 +29,70 @@ Vec2 = np.ndarray
 
 # Простая заглушка для обхода: замените на полноценный алгоритм при необходимости
 def simple_rrt(start: Vec2, goal: Vec2, obstacles: List[Tuple[Vec2, float]]) -> List[Vec2]:
-    path = [start]
+    """
+    A very simple “RRT‐inspired” straight‐line planner with single‐step detours around circular obstacles.
+    Iteratively projects obstacles onto the segment from current point to goal, and if a collision is detected
+    takes one detour point around the nearest obstacle. Stops when the remaining segment is obstacle‐free,
+    or after a fixed number of iterations.
+
+    Args:
+        start:   2D numpy array [x, y] of the start pose.
+        goal:    2D numpy array [x, y] of the goal pose.
+        obstacles: list of (center: Vec2, radius: float).
+
+    Returns:
+        A list of 2D waypoints from start to goal avoiding obstacles (in a single‐detour step each time).
+    """
+    # If start and goal coincide, return trivial path.
+    v0 = goal - start
+    if np.dot(v0, v0) < 1e-6:
+        return [start, goal]
+
+    path: List[Vec2] = [start.copy()]
     current = start.copy()
 
-    while True:
+    max_iterations = 10
+    for _ in range(max_iterations):
+        # Vector towards goal
         v = goal - current
         vv = np.dot(v, v)
-        collisions: List[Tuple[float, Vec2, float]] = []
+        if vv < 1e-6:
+            break
 
-        # Собираем все пересечения текущего сегмента
+        # Find all obstacle intersections along [current → goal]
+        collisions: List[Tuple[float, Vec2, float]] = []
         for (o, r) in obstacles:
             t = np.dot(o - current, v) / vv
             t_clamped = float(np.clip(t, 0.0, 1.0))
-            p = current + t_clamped * v
-            if np.linalg.norm(p - o) < r:
+            proj = current + t_clamped * v
+            if np.linalg.norm(proj - o) < r:
                 collisions.append((t_clamped, o, r))
 
-        # Если пересечений нет — завершаем путь
+        # No collisions: append goal and finish
         if not collisions:
-            path.append(goal)
-            break
+            path.append(goal.copy())
+            return path
 
-        # Сортируем по ближайшему столкновению
+        # Take the earliest collision
         collisions.sort(key=lambda x: x[0])
-        _, o, r = collisions[0]
+        _, center, radius = collisions[0]
 
-        # Вычисляем детур вокруг круга
+        # Compute a perpendicular detour direction
         perp = np.array([-v[1], v[0]])
-        perp /= np.linalg.norm(perp)
-        margin = 1.0
-        detour = o + perp * (r + margin)
+        norm_perp = np.linalg.norm(perp)
+        if norm_perp < 1e-6:
+            # Degenerate case: cannot compute a valid detour; abort detours
+            break
+        perp /= norm_perp
+
+        margin = 1.0  # safety margin
+        detour = center + perp * (radius + margin)
 
         path.append(detour)
         current = detour
 
+    # Fallback: if we hit the iteration limit or a degenerate case, just connect straight
+    path.append(goal.copy())
     return path
 
 # Режимы управления

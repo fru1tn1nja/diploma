@@ -54,20 +54,24 @@ async def close_pool():
 async def ws_mode(ws: WebSocket):
     await ws.accept()
     conn: asyncpg.Connection | None = None
+    conn = await asyncpg.connect(dsn=DB_DSN)
     try:
-        conn = await asyncpg.connect(dsn=DB_DSN)
+        
         # слушаем канал pg_notify (можно LISTEN) или опрашиваем таблицу switches
         prev = None
         while True:
             row = await conn.fetchrow("SELECT mode FROM current_mode LIMIT 1")
             mode = row["mode"] if row else "1"
             if mode != prev:
-                await ws.send_text(str(mode))
+                try:
+                    await ws.send_text(str(mode))
+                except WebSocketDisconnect:
+                    break
                 prev = mode
             await asyncio.sleep(0.5)
     finally:
-        if conn: await conn.close()
-        await ws.close()
+        if conn: 
+            await conn.close()
 
         
 @app.get("/api/telemetry/latest")
@@ -89,13 +93,14 @@ async def telemetry_ws(ws: WebSocket, device_id: int):
     try:
         async with Client(MQTT_HOST, port=MQTT_PORT) as client:
             await client.subscribe(topic)
-            async with client.unfiltered_messages() as messages:
+            async with client.messages() as messages:
                 async for msg in messages:
-                    await ws.send_text(msg.payload.decode())
-    except (MqttError, WebSocketDisconnect):
+                    try:
+                        await ws.send_text(msg.payload.decode())
+                    except WebSocketDisconnect:
+                        break
+    except MqttError:
         pass
-    finally:
-        await ws.close()
 
 @app.websocket("/ws/mission/{device_id}")
 async def mission_ws(ws: WebSocket, device_id: int):
@@ -104,13 +109,14 @@ async def mission_ws(ws: WebSocket, device_id: int):
     try:
         async with Client(MQTT_HOST, port=MQTT_PORT) as client:
             await client.subscribe(topic)
-            async with client.unfiltered_messages() as messages:
+            async with client.messages() as messages:
                 async for msg in messages:
-                    await ws.send_text(msg.payload.decode())
-    except (MqttError, WebSocketDisconnect):
+                    try:
+                        await ws.send_text(msg.payload.decode())
+                    except WebSocketDisconnect:
+                        break
+    except MqttError:
         pass
-    finally:
-        await ws.close()
 
 @app.websocket("/ws/obstacles/{device_id}")
 async def ws_obstacles(ws: WebSocket, device_id: int):
@@ -119,13 +125,28 @@ async def ws_obstacles(ws: WebSocket, device_id: int):
     try:
         async with Client(MQTT_HOST, port=MQTT_PORT) as client:
             await client.subscribe(topic)
-            async with client.unfiltered_messages() as msgs:
+            async with client.messages() as msgs:
                 async for msg in msgs:
-                    await ws.send_text(msg.payload.decode())
-    except (MqttError, WebSocketDisconnect):
+                    try:
+                        await ws.send_text(msg.payload.decode())
+                    except WebSocketDisconnect:
+                        break
+    except MqttError:
         pass
-    finally:
-        await ws.close()
+
+
+
+@app.get("/api/telemetry/history")
+async def telemetry_history(device_id: int, limit: int = 500,
+                             pool: asyncpg.Pool = Depends(get_pool)):
+    rows = await pool.fetch(
+        "SELECT ts, battery FROM telemetry WHERE device_id=$1 ORDER BY ts DESC LIMIT $2",
+        device_id, limit
+    )
+    # oldest-first
+    hist = [{"ts": r["ts"], "battery": r["battery"]} for r in rows][::-1]
+    return hist
+
 
 # ───── локальный запуск ────────────────────────────────────────────────────
 if __name__ == "__main__":

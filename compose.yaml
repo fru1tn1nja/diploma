@@ -11,7 +11,7 @@ volumes:
 # ---------------------------------------------------------------------------
 networks:
   internal: {}    # приватная bridge-сеть (Postgres, EMQX, Collector, Gateway)
-  public:   {}    # наружу выводим только gateway и streamlit
+  public:   {}
 
 # ---------------------------------------------------------------------------
 # SERVICES
@@ -37,7 +37,6 @@ services:
     image: emqx/emqx:5.6
     restart: on-failure
     env_file: .env
-    # Оставьте порт 1883 наружу только при локальной отладке
     ports:
       - "${MQTT_PORT:-1883}:1883"     # MQTT
       - "8083:8083"                   # ws
@@ -50,7 +49,7 @@ services:
     build:
       context: .
       dockerfile: docker/switch_logic/Dockerfile
-    network_mode: host          # DDS multicast, портов наружу не открывает
+    network_mode: host         
     env_file: .env
     depends_on:
       - emqx
@@ -102,7 +101,7 @@ services:
       target: runtime
     env_file: .env
     ports:
-      - "8000:${API_PORT:-8000}"     # публичная точка API
+      - "8000:${API_PORT:-8000}"
     depends_on:
       - postgres
       - emqx
@@ -117,7 +116,7 @@ services:
       dockerfile: docker/generator/Dockerfile
     environment:
       DEVICE_ID: ${DEVICE_ID}
-      MQTT_HOST: ${MQTT_HOST}         # брокер во внутренней сети
+      MQTT_HOST: ${MQTT_HOST}
       MQTT_PORT: ${MQTT_PORT}
       FREQ_HZ: ${FREQ_HZ}
     depends_on:
@@ -138,12 +137,15 @@ services:
     restart: on-failure
 
   rosbridge:
-    image: ros:humble-ros-base
     build:
       context: .
       dockerfile: docker/rosbridge/Dockerfile
     env_file: .env
     network_mode: host
+    expose:
+      - "9000"
+    ports:
+      - "9000:9000"
     depends_on:
       - switch_logic
   mission_bridge:
@@ -216,16 +218,17 @@ services:
   #   restart: unless-stopped
 
   # ---------------------------- STREAMLIT DASHBOARD ------------------------
-  # streamlit:
-  #   build:
-  #     context: .
-  #     dockerfile: docker/streamlit/Dockerfile
-  #     target: runtime
-  #   env_file: .env
-  #   ports:
-  #     - "8501:8501"
-  #   depends_on:
-  #     - gateway
-  #   networks:
-  #     - internal
-  #     - public
+
+  streamlit:
+    build:
+      context: .
+      dockerfile: docker/streamlit/Dockerfile
+    ports:
+      - "8501:8501"
+    env_file: .env
+    depends_on:
+      - gateway
+    networks:
+      - internal
+      - public
+    restart: unless-stopped

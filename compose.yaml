@@ -143,9 +143,9 @@ services:
     env_file: .env
     network_mode: host
     expose:
-      - "9000"
+      - "9090"
     ports:
-      - "9000:9000"
+      - "9090:9090"
     depends_on:
       - switch_logic
   mission_bridge:

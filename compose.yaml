@@ -49,35 +49,37 @@ services:
     build:
       context: .
       dockerfile: docker/switch_logic/Dockerfile
-    network_mode: host         
     env_file: .env
     depends_on:
       - emqx
-    restart: on-failure
+    networks:
+      - internal
+    
 
   # ---------------------------- AI PLANNER ---------------------------------
   ai_planner:
     build:
       context: .
       dockerfile: docker/ai_planner/Dockerfile
-    network_mode: host
     env_file: .env
     depends_on:
       - emqx
       - switch_logic
       - postgres
-    restart: on-failure
+    networks:
+      - internal
+  
 
   # ---------------------------- ROS → MQTT BRIDGE --------------------------
   ros_mqtt_bridge:
     build:
       context: .
       dockerfile: docker/bridge/Dockerfile
-    network_mode: host
-    env_file: .env           # DEVICE_ID, MQTT_HOST, MQTT_PORT
+    env_file: .env
     depends_on:
       - emqx
-    restart: on-failure
+    networks:
+      - internal
 
   # ---------------------------- TELEMETRY COLLECTOR ------------------------
   collector:
@@ -141,22 +143,27 @@ services:
       context: .
       dockerfile: docker/rosbridge/Dockerfile
     env_file: .env
-    network_mode: host
-    expose:
-      - "9090"
-    ports:
-      - "9090:9090"
     depends_on:
       - switch_logic
+    networks:
+      - internal
+    ports:
+      # WebSocket API
+      - "9090:9090"
+      # и те же Fast RTPS порты, чтобы ноды могли общаться внутри bridge
+      - "7400-7402:7400-7402/udp"
+      - "7410-7412:7410-7412/udp"
+      - "7676:7676/udp"
+
   mission_bridge:
     build:
       context: .
       dockerfile: docker/mission_bridge/Dockerfile
-    network_mode: host
     env_file: .env
     depends_on:
       - emqx
-    restart: on-failure
+    networks:
+      - internal
   mode_writer:
     build:
       context: .
@@ -175,20 +182,20 @@ services:
       context: .
       dockerfile: docker/mission_mqtt_to_ros/Dockerfile
     env_file: .env
-    network_mode: host
     depends_on:
       - emqx
-    restart: on-failure
+    networks:
+      - internal
 
   obstacle_bridge:
     build:
       context: .
       dockerfile: docker/obstacle_bridge/Dockerfile
-    network_mode: host
     env_file: .env
     depends_on:
       - emqx
-    restart: on-failure
+    networks:
+      - internal
   # gazebo:
   #   build:
   #     context: docker/gazebo  

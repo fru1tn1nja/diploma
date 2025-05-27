@@ -30,7 +30,7 @@ class MissionMqttToRos(Node):
         )
         self._mqtt.on_message = self.on_mqtt_message
         self._mqtt.connect(
-            '127.0.0.1',
+            'emqx',
             int(os.getenv('MQTT_PORT', '1883')),
             keepalive=30
         )
